@@ -21,7 +21,7 @@ services:
   # Сервис для Angular фронтенда
   frontend:
     build:
-      context: ../lms-curator-client # Путь ВЫШЕ из папки backend -> в папку frontend
+      context: ../../curator-project-frontend/lms-curator-client # Путь ВЫШЕ из папки backend -> в папку frontend
       dockerfile: Dockerfile
     container_name: curator-angular-app
     restart: unless-stopped
