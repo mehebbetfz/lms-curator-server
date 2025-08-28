@@ -1,0 +1,39 @@
+name: Release
+on:
+  push:
+    branches: [ main, next ]
+    tags-ignore: [ '**' ]  # Игнорировать push тегов
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Для создания релизов
+      issues: write    # Для комментариев в issues
+      pull-requests: write  # Для комментариев в PR
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Полная история для semantic-release
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test  # Добавьте если есть тесты
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
