@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: .  # Точка означает "текущая папка" (backend)
+      dockerfile: Dockerfile
+    container_name: curator-nest-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # Добавьте сюда ваши переменные окружения (например, для БД)
+      # - DATABASE_URL=postgresql://...
+    ports:
+      - "3000:3000" # Маппим порт 3000 контейнера на порт 3000 локальной машины
+    networks:
+      - app-network
+    # volumes:
+    #   - ./backend:/app # Раскомментируйте для разработки, чтобы код синхронизировался
+    #   - /app/node_modules
+
+  # Сервис для Angular фронтенда
+  frontend:
+    build:
+      context: ../lms-curator-client # Путь ВЫШЕ из папки backend -> в папку frontend
+      dockerfile: Dockerfile
+    container_name: curator-angular-app
+    restart: unless-stopped
+    ports:
+      - "80:80" # Nginx в контейнере слушает 80 порт, маппим на 80 порт сервера
+    depends_on:
+      - backend # Запускать после запуска бекенда
+    networks:
+      - app-network
+
+# Создаем общую сеть, чтобы контейнеры видели друг друга по имени
+networks:
+  app-network:
+    driver: bridge
