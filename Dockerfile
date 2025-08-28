@@ -1,5 +1,5 @@
-# Используем официальный Node.js образ для сборки и запуска
-FROM node:18-alpine AS development-stage
+# ИСПРАВЛЕНО: Заменили 18-alpine на 20-alpine
+FROM node:20-alpine AS development-stage
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -17,6 +17,7 @@ COPY . .
 RUN npm run build
 
 # Этап production
+# Тут уже правильно - 20-alpine
 FROM node:20-alpine AS production-stage
 
 WORKDIR /app
