@@ -18,6 +18,7 @@ RUN npm run build
 
 # Этап production
 FROM node:20-alpine AS production-stage
+FROM node:20-alpine AS development-stage
 
 WORKDIR /app
 
