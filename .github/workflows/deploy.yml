@@ -54,6 +54,10 @@ jobs:
             # Устанавливаем правильные права
             chmod 600 .env.backend
             
+            echo "Removing old container if exists..."
+            docker stop curator-backend || true
+            docker rm curator-backend || true
+            
             # Пересобираем и запускаем только backend
             echo "Building and starting backend..."
             docker-compose up -d --build backend
