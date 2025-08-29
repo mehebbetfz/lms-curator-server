@@ -21,7 +21,7 @@ import {TerminusModule} from "@nestjs/terminus";
         retryDelay: 3000,
         connectionFactory: (connection) => {
           connection.on('connected', () => {
-            console.log('✅ Connected to external MongoDB');
+            console.log('✅ Connected to external MongoDB ');
           });
           connection.on('error', (error) => {
             console.error('❌ MongoDB connection error:', error);
