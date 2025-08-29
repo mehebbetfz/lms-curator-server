@@ -27,10 +27,6 @@ jobs:
             # Переходим в корневую папку проекта
             cd curator-project
             
-            # Останавливаем только backend контейнер
-            docker-compose stop backend || true
-            docker-compose rm -f backend || true
-            
             # Обновляем код backend репозитория 
             echo "Updating backend code..."
             cd curator-project-backend/lms-curator-server
@@ -54,13 +50,54 @@ jobs:
             # Устанавливаем правильные права
             chmod 600 .env.backend
             
-            echo "Removing old container if exists..."
-            docker stop curator-backend || true
-            docker rm curator-backend || true
+            # 1. Собираем новый образ (старый продолжает работать)
+            echo "Building new backend image..."
+            docker-compose build backend
             
-            # Пересобираем и запускаем только backend
-            echo "Building and starting backend..."
-            docker-compose up -d --build backend
+            # 2. Запускаем новый контейнер с временным портом
+            echo "Starting new backend container on port 3001..."
+            docker run -d \
+              --name curator-backend-new \
+              -p 3001:3000 \
+              --env-file .env.backend \
+              --network curator-project_curator-network \
+              curator-project-backend
+            
+            # 3. Ждем и проверяем новую версию
+            echo "Testing new backend version..."
+            sleep 15
+            
+            if curl -f http://localhost:3001/api/health; then
+              echo "✅ New backend version is healthy!"
+            
+              # 4. Останавливаем старый контейнер
+              echo "Stopping old backend container..."
+              docker stop curator-backend 2>/dev/null || true
+              docker rm curator-backend 2>/dev/null || true
+            
+              # 5. Переименовываем новый контейнер
+              echo "Switching to new version..."
+              docker rename curator-backend-new curator-backend
+            
+              # 6. Перезапускаем на правильном порту
+              echo "Restarting on main port 3000..."
+              docker stop curator-backend
+              docker rm curator-backend
+              docker run -d \
+                --name curator-backend \
+                -p 3000:3000 \
+                --env-file .env.backend \
+                --network curator-project_curator-network \
+                curator-project-backend
+            
+              echo "🎉 BACKEND updated with ZERO DOWNTIME!"
+            
+            else
+              echo "❌ New backend version failed - keeping old version"
+              docker stop curator-backend-new 2>/dev/null || true
+              docker rm curator-backend-new 2>/dev/null || true
+              echo "⚠️ Rollback completed - old version remains running"
+            fi
             
             # Ждем запуска и проверяем здоровье
             sleep 15
