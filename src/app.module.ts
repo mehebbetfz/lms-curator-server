@@ -4,9 +4,11 @@ import { AppService } from './app.service';
 import {MongooseModule} from "@nestjs/mongoose";
 import {ConfigModule, ConfigService} from "@nestjs/config";
 import {HealthController} from "./controllers/health.controller";
+import {TerminusModule} from "@nestjs/terminus";
 
 @Module({
   imports: [
+    TerminusModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
