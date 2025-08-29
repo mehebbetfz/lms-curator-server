@@ -25,7 +25,7 @@ jobs:
             echo "🚀 Starting BACKEND deployment..."
             
             # Переходим в корневую папку проекта
-            cd /home/curator-project
+            cd curator-project
             
             # Останавливаем только backend контейнер
             docker-compose stop backend || true
