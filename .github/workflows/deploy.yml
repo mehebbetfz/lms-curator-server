@@ -31,7 +31,7 @@ jobs:
             docker-compose stop backend || true
             docker-compose rm -f backend || true
             
-            # Обновляем код backend репозитория
+            # Обновляем код backend репозитория 
             echo "Updating backend code..."
             cd curator-project-backend/lms-curator-server
             git pull origin main
