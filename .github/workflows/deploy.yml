@@ -38,7 +38,7 @@ jobs:
             cat > .env.backend << EOF
             NODE_ENV=production
             PORT=3000
-            TZ=Europe/Moscow
+            TZ=Asia/Baku
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=7d
