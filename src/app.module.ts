@@ -12,6 +12,7 @@ import {
 } from './modules/authority-categories/authority-categories.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { SchoolsModule } from './modules/schools/schools.module';
+import { BranchesModule } from './modules/branches/branches.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { SchoolsModule } from './modules/schools/schools.module';
     AuthorityCategoriesModule,
     CoreModule,
     CompaniesModule,
-    SchoolsModule
+    SchoolsModule,
+    BranchesModule
   ],
   controllers: [AppController],
   providers: [AppService],
