@@ -10,6 +10,8 @@ import { AuthoritiesModule } from './modules/authorities/authorities.module';
 import {
   AuthorityCategoriesModule
 } from './modules/authority-categories/authority-categories.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { SchoolsModule } from './modules/schools/schools.module';
 
 @Module({
   imports: [
@@ -39,7 +41,9 @@ import {
     UsersModule,
     AuthoritiesModule,
     AuthorityCategoriesModule,
-    CoreModule
+    CoreModule,
+    CompaniesModule,
+    SchoolsModule
   ],
   controllers: [AppController],
   providers: [AppService],
