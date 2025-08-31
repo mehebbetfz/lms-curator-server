@@ -15,11 +15,6 @@ export class CreateUserDto {
   @MaxLength(100, { message: 'EMAIL_IS_TOO_LONG' })
   email: string;
 
-  @IsString({ message: 'USERNAME_NEED_TO_BE_STRING' })
-  @MinLength(3, { message: 'USERNAME_IS_TOO_SHORT' })
-  @MaxLength(30, { message: 'USERNAME_IS_TOO_LONG' })
-  username: string;
-
   @IsString({ message: 'FIRST_NAME_NEED_TO_BE_STRING' })
   @MaxLength(50, { message: 'FIRST_NAME_IS_TOO_LONG' })
   firstName: string;
@@ -37,7 +32,7 @@ export class CreateUserDto {
   @Matches(/^\+?[1-9]\d{7,14}$/, {
     message: 'PHONE_NUMBER_IS_INVALID',
   })
-  phone?: string;
+  phone: string;
 
   @IsOptional()
   @Matches(/^\+?[1-9]\d{7,14}$/, {
