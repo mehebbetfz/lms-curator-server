@@ -3,20 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { HealthController } from './controllers/health.controller';
-import { TerminusModule } from '@nestjs/terminus';
-import { AuthoritySchema } from './models/authority.model';
-import { AuthorityController } from './controllers/authority.controller';
-import { CarSchema } from './models/car.model';
-
-const dynamicModels = [
-  {
-    name: 'Authority',
-    schema: AuthoritySchema,
-  },
-  { name: 'Car', schema: CarSchema },
-];
-const dynamicControllers = [AuthorityController];
+import { UsersModule } from './users/users.module';
+import {TerminusModule} from "@nestjs/terminus";
 
 @Module({
   imports: [
@@ -43,9 +31,9 @@ const dynamicControllers = [AuthorityController];
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature(dynamicModels),
+    UsersModule,
   ],
-  controllers: [AppController, HealthController, ...dynamicControllers],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
