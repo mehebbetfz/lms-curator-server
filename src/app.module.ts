@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { TerminusModule } from '@nestjs/terminus';
+import { AuthoritiesModule } from './authorities/authorities.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TerminusModule } from '@nestjs/terminus';
       inject: [ConfigService],
     }),
     UsersModule,
+    AuthoritiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
