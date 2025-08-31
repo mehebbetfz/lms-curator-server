@@ -3,10 +3,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UsersModule } from './users/users.module';
 import { TerminusModule } from '@nestjs/terminus';
-import { AuthoritiesModule } from './authorities/authorities.module';
-import { AuthorityCategoriesModule } from './authority-categories/authority-categories.module';
+import { CoreModule } from './core/modules/core.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthoritiesModule } from './modules/authorities/authorities.module';
+import {
+  AuthorityCategoriesModule
+} from './modules/authority-categories/authority-categories.module';
 
 @Module({
   imports: [
@@ -36,6 +39,7 @@ import { AuthorityCategoriesModule } from './authority-categories/authority-cate
     UsersModule,
     AuthoritiesModule,
     AuthorityCategoriesModule,
+    CoreModule
   ],
   controllers: [AppController],
   providers: [AppService],
