@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { AuthoritiesModule } from './authorities/authorities.module';
+import { AuthorityCategoriesModule } from './authority-categories/authority-categories.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthoritiesModule } from './authorities/authorities.module';
     }),
     UsersModule,
     AuthoritiesModule,
+    AuthorityCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
