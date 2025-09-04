@@ -7,12 +7,15 @@ import { TerminusModule } from '@nestjs/terminus';
 import { CoreModule } from './core/modules/core.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthoritiesModule } from './modules/authorities/authorities.module';
-import {
-  AuthorityCategoriesModule
-} from './modules/authority-categories/authority-categories.module';
+import { AuthorityCategoriesModule } from './modules/authority-categories/authority-categories.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { SchoolsModule } from './modules/schools/schools.module';
 import { BranchesModule } from './modules/branches/branches.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { UserRolesModule } from './modules/user-roles/user-roles.module';
+import { JwtAuthGuard } from './core/guards/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -45,9 +48,18 @@ import { BranchesModule } from './modules/branches/branches.module';
     CoreModule,
     CompaniesModule,
     SchoolsModule,
-    BranchesModule
+    BranchesModule,
+    RolesModule,
+    UserRolesModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    AppService,
+  ],
 })
 export class AppModule {}
