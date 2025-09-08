@@ -33,7 +33,7 @@ export class AuthController {
       };
       
       return await this.authService.login(
-        loginDto.email,
+        loginDto.username,
         loginDto.password,
         userAgent,
         ipAddress,

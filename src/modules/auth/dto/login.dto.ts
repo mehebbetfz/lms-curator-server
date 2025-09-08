@@ -1,13 +1,13 @@
 // dto/login.dto.ts
-import { IsEmail, IsString, MinLength, IsOptional, IsMongoId } from 'class-validator';
+import { IsString, MinLength, IsOptional, IsMongoId } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({ example: 'user@example.com' })
-  @IsEmail()
-  email: string;
+  @ApiProperty({ required: true })
+  @IsString()
+  username: string;
   
-  @ApiProperty({ example: 'password123' })
+  @ApiProperty({ required: true })
   @IsString()
   @MinLength(6)
   password: string;

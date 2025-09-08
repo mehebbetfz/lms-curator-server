@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { AuthToken } from './schemas/auth-token.schema';
 import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
-import { randomBytes } from 'crypto';
+import { randomBytes, scryptSync } from 'crypto';
 import { ContextualAuthority } from './interfaces/contextual-authority.interface';
 import * as bcrypt from 'bcrypt';
 import { UserStatus } from '../../core/enums/user-status.enum';
@@ -25,9 +25,9 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
   
-  async validateUser(email: string, password: string): Promise<User> {
+  async validateUser(username: string, password: string): Promise<User> {
     const user = await this.userModel
-      .findOne({ email: email.toLowerCase() })
+      .findOne({ username })
       .select('+password')
       .exec();
     
@@ -35,7 +35,24 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Разбираем хеш из формата "salt.hexHash"
+    const passwordParts = user.password.split('.');
+    
+    if (passwordParts.length !== 2) {
+      throw new UnauthorizedException('Invalid password format');
+    }
+    
+    const [salt, storedHash] = passwordParts;
+    
+    // Генерируем хеш для введенного пароля с тем же salt
+    const hash = scryptSync(password, salt, 32) as Buffer;
+    const inputHash = hash.toString('hex');
+    
+    // Сравниваем хеши (защита от timing attacks)
+    const isPasswordValid = this.compareHashesTimingSafe(inputHash, storedHash);
+    
+    console.log('Password validation result:', isPasswordValid);
+    
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -46,15 +63,29 @@ export class AuthService {
     
     return user;
   }
+
+  // Защита от timing attacks
+  private compareHashesTimingSafe(hash1: string, hash2: string): boolean {
+    if (hash1.length !== hash2.length) {
+      return false;
+    }
+    
+    let result = 0;
+    for (let i = 0; i < hash1.length; i++) {
+      result |= hash1.charCodeAt(i) ^ hash2.charCodeAt(i);
+    }
+    
+    return result === 0;
+  }
   
   async login(
-    email: string,
+    username: string,
     password: string,
     userAgent?: string,
     ipAddress?: string,
     context?: HierarchyContext,
   ): Promise<any> {
-    const user = await this.validateUser(email, password);
+    const user = await this.validateUser(username, password);
     
     const tokens = await this.generateTokens(user, userAgent, ipAddress, context);
     

@@ -1,9 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import * as mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 @Schema({ timestamps: true })
-export class Branch extends Document {
+export class Course extends Document {
   @Prop({ required: true })
   name: string;
   
@@ -12,9 +12,6 @@ export class Branch extends Document {
   
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Company' })
   company_id: mongoose.Schema.Types.ObjectId;
-  
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Course' })
-  course_id: mongoose.Schema.Types.ObjectId;
 }
 
-export const BranchSchema = SchemaFactory.createForClass(Branch);
+export const CourseSchema = SchemaFactory.createForClass(Course);

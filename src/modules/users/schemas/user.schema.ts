@@ -20,10 +20,7 @@ export class User extends Document {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ required: true })
-  encryptedPassword: string;
-
-  @Prop({ required: true, unique: true, lowercase: true, immutable: true })
+  @Prop({ required: true, unique: true, immutable: true })
   username: string;
 
   @Prop({ required: true })

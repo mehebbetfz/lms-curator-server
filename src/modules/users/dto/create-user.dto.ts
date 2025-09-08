@@ -29,15 +29,11 @@ export class CreateUserDto {
   middleName?: string;
   
   @IsOptional()
-  @Matches(/^\+?[1-9]\d{7,14}$/, {
-    message: 'PHONE_NUMBER_IS_INVALID',
-  })
+  @IsString({ message: 'PHONE_NEED_TO_BE_STRING' })
   phone: string;
   
   @IsOptional()
-  @Matches(/^\+?[1-9]\d{7,14}$/, {
-    message: 'WHATSAPP_PHONE_NUMBER_IS_INVALID',
-  })
+  @IsString({ message: 'PHONE_NEED_TO_BE_STRING' })
   whatsappPhone?: string;
   
   @IsOptional()

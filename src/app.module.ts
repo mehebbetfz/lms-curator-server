@@ -16,6 +16,7 @@ import { UserRolesModule } from './modules/user-roles/user-roles.module';
 import { JwtAuthGuard } from './core/guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
+import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [
@@ -52,13 +53,15 @@ import { AuthModule } from './modules/auth/auth.module';
     RolesModule,
     UserRolesModule,
     AuthModule,
+    CoursesModule,
+    BranchesModule
   ],
   controllers: [AppController],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
     AppService,
   ],
 })
