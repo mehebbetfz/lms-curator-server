@@ -23,4 +23,4 @@ export class UserRole extends Document {
   user_id: mongoose.Schema.Types.ObjectId;
 }
 
-export const UserRoleSchema = SchemaFactory.createForClass(UserRole);
+export const UserCompanyRoleSchema = SchemaFactory.createForClass(UserRole);

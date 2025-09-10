@@ -3,7 +3,7 @@ import {
 } from 'class-validator';
 import mongoose from 'mongoose';
 
-export class CreateUserRoleDto {
+export class CreateUserCompanyRoleDto {
   @IsString({ message: 'ID_NEED_TO_BE_STRING' })
   company_id: mongoose.Schema.Types.ObjectId;
   

@@ -12,11 +12,12 @@ import { CompaniesModule } from './modules/companies/companies.module';
 import { SchoolsModule } from './modules/schools/schools.module';
 import { BranchesModule } from './modules/branches/branches.module';
 import { RolesModule } from './modules/roles/roles.module';
-import { UserRolesModule } from './modules/user-roles/user-roles.module';
-import { JwtAuthGuard } from './core/guards/auth.guard';
-import { APP_GUARD } from '@nestjs/core';
+import { UserCompanyRolesModule } from './modules/user-company-roles/user-company-roles.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import {
+  CompanyRolesModule
+} from './modules/company-roles/company-roles.module';
 
 @Module({
   imports: [
@@ -51,10 +52,11 @@ import { CoursesModule } from './modules/courses/courses.module';
     SchoolsModule,
     BranchesModule,
     RolesModule,
-    UserRolesModule,
+    UserCompanyRolesModule,
     AuthModule,
     CoursesModule,
-    BranchesModule
+    BranchesModule,
+    CompanyRolesModule
   ],
   controllers: [AppController],
   providers: [
