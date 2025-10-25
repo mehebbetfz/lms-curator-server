@@ -3,20 +3,23 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { HealthController } from './controllers/health.controller';
 import { TerminusModule } from '@nestjs/terminus';
-import { AuthoritySchema } from './models/authority.model';
-import { AuthorityController } from './controllers/authority.controller';
-import { CarSchema } from './models/car.model';
-
-const dynamicModels = [
-  {
-    name: 'Authority',
-    schema: AuthoritySchema,
-  },
-  { name: 'Car', schema: CarSchema },
-];
-const dynamicControllers = [AuthorityController];
+import { CoreModule } from './core/modules/core.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthoritiesModule } from './modules/authorities/authorities.module';
+import { AuthorityCategoriesModule } from './modules/authority-categories/authority-categories.module';
+import { CompaniesModule } from './modules/companies/companies.module';
+import { SchoolsModule } from './modules/schools/schools.module';
+import { BranchesModule } from './modules/branches/branches.module';
+import { UserCompanyRolesModule } from './modules/user-company-roles/user-company-roles.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { CoursesModule } from './modules/courses/courses.module';
+import {
+  CompanyRolesModule
+} from './modules/company-roles/company-roles.module';
+import {
+  CompanyRoleAuthoritiesModule
+} from './modules/company-role-authorities/company-role-authorities.module';
 
 @Module({
   imports: [
@@ -43,9 +46,28 @@ const dynamicControllers = [AuthorityController];
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature(dynamicModels),
+    UsersModule,
+    AuthoritiesModule,
+    AuthorityCategoriesModule,
+    CoreModule,
+    CompaniesModule,
+    SchoolsModule,
+    BranchesModule,
+    UserCompanyRolesModule,
+    AuthModule,
+    CoursesModule,
+    BranchesModule,
+    CompanyRolesModule,
+    UserCompanyRolesModule,
+    CompanyRoleAuthoritiesModule
   ],
-  controllers: [AppController, HealthController, ...dynamicControllers],
-  providers: [AppService],
+  controllers: [AppController],
+  providers: [
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
+    AppService,
+  ],
 })
 export class AppModule {}
