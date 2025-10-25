@@ -10,6 +10,7 @@ import mongoose, {
   Model,
   UpdateQuery,
 } from 'mongoose';
+import { Context } from '../dto/context.dto';
 
 export class BaseService<T> {
   protected readonly logger: Logger;
@@ -36,7 +37,7 @@ export class BaseService<T> {
           throw new ConflictException('RECORD_ALREADY_EXISTS');
         }
       }
-
+      
       const newDocument = new this.model(createData);
       return (await newDocument.save({ session })) as T;
     } catch (error) {

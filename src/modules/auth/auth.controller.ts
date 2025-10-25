@@ -4,7 +4,7 @@ import {
   Controller,
   Ip,
   Headers,
-  Post, Req, Get,
+  Post, Req, Get, UseGuards,
 } from '@nestjs/common';
 import { AuthResponse } from './dto/auth-response.dto';
 import { AuthService } from './auth.service';
@@ -13,6 +13,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LogoutDto } from './dto/logout.dto';
 import { ProfileResponse } from './dto/profile-response.dto';
+import { JwtAuthGuard } from '../../core/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -26,18 +27,11 @@ export class AuthController {
     @Ip() ipAddress: string,
   ): Promise<AuthResponse> {
     try {
-      const context = {
-        companyId: loginDto.companyId,
-        courseId: loginDto.courseId,
-        branchId: loginDto.branchId,
-      };
-      
       return await this.authService.login(
         loginDto.username,
         loginDto.password,
         userAgent,
         ipAddress,
-        context,
       );
     } catch (error) {
       if (error.message.includes('hierarchy')) {
@@ -106,17 +100,62 @@ export class AuthController {
   }
   
   @Get('contexts')
-  async getAvailableContexts(@Req() request: any) {
+  @UseGuards(JwtAuthGuard)
+  async getAvailableContexts(@Req() req: any) {
     const [companies, courses, branches] = await Promise.all([
-      this.authService.getUsersCompanies(request.user.id),
-      this.authService.getUsersCourses(request.user.id),
-      this.authService.getUsersBranches(request.user.id),
+      this.authService.getUsersCompanies(req.user.id),
+      this.authService.getUsersCourses(req.user.id),
+      this.authService.getUsersBranches(req.user.id),
     ]);
     
     return {
       companies,
       courses,
       branches,
+    };
+  }
+  
+  @Post('select-context')
+  @UseGuards(JwtAuthGuard)
+  async selectContext(
+    @Req() req: any,
+    @Body() context: {
+      companyId: string;
+      courseId?: string;
+      branchId?: string;
+    },
+    @Headers('user-agent') userAgent: string,
+    @Ip() ipAddress: string,
+  ): Promise<AuthResponse> {
+    // Проверяем доступ пользователя к этому контексту
+    const hasAccess = await this.authService.validateUserContext(
+      req.user.id,
+      context,
+    );
+    
+    if (!hasAccess) {
+      throw new BadRequestException('User does not have access to this context');
+    }
+    
+    // Генерируем новые токены с выбранным контекстом
+    const user = await this.authService.findUserById(req.user.id);
+    const tokens = await this.authService.generateTokens(
+      user,
+      userAgent,
+      ipAddress,
+      context,
+    );
+    
+    return {
+      ...tokens,
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      context,
     };
   }
   

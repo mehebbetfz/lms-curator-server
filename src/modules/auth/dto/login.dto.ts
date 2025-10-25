@@ -11,19 +11,4 @@ export class LoginDto {
   @IsString()
   @MinLength(6)
   password: string;
-  
-  @ApiProperty({ required: false, example: '507f1f77bcf86cd799439011' })
-  @IsOptional()
-  @IsMongoId()
-  companyId?: string;
-  
-  @ApiProperty({ required: false, example: '507f1f77bcf86cd799439012' })
-  @IsOptional()
-  @IsMongoId()
-  courseId?: string;
-  
-  @ApiProperty({ required: false, example: '507f1f77bcf86cd799439013' })
-  @IsOptional()
-  @IsMongoId()
-  branchId?: string;
 }

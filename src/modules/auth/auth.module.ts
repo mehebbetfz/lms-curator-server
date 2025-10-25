@@ -11,6 +11,13 @@ import { JwtStrategy } from '../../core/strategies/jwt.strategy';
 import {
   ContextualAuthoritiesGuard
 } from '../../core/guards/contextual-authorities.guard';
+import {
+  UserCompanyRolesModule
+} from '../user-company-roles/user-company-roles.module';
+import {
+  CompanyRole,
+  CompanyRoleSchema,
+} from '../company-roles/schemas/company-role.schema';
 
 @Module({
   imports: [
@@ -28,7 +35,9 @@ import {
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: AuthToken.name, schema: AuthTokenSchema },
+      { name: CompanyRole.name, schema: CompanyRoleSchema },
     ]),
+    UserCompanyRolesModule
   ],
   providers: [AuthService, JwtStrategy, ContextualAuthoritiesGuard],
   controllers: [AuthController],

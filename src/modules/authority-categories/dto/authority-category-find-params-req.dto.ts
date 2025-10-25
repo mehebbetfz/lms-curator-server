@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateCourseDto } from './create-course.dto';
+import { CreateAuthorityCategoryDto } from './create-authority-category.dto';
 
-export class CourseFindParamsReqDto extends PartialType(CreateCourseDto) {
+export class AuthorityCategoryFindParamsReqDto extends PartialType(CreateAuthorityCategoryDto) {
     page: number;
     limit: number;
 }

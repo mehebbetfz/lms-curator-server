@@ -11,13 +11,15 @@ import { AuthorityCategoriesModule } from './modules/authority-categories/author
 import { CompaniesModule } from './modules/companies/companies.module';
 import { SchoolsModule } from './modules/schools/schools.module';
 import { BranchesModule } from './modules/branches/branches.module';
-import { RolesModule } from './modules/roles/roles.module';
 import { UserCompanyRolesModule } from './modules/user-company-roles/user-company-roles.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CoursesModule } from './modules/courses/courses.module';
 import {
   CompanyRolesModule
 } from './modules/company-roles/company-roles.module';
+import {
+  CompanyRoleAuthoritiesModule
+} from './modules/company-role-authorities/company-role-authorities.module';
 
 @Module({
   imports: [
@@ -51,12 +53,13 @@ import {
     CompaniesModule,
     SchoolsModule,
     BranchesModule,
-    RolesModule,
     UserCompanyRolesModule,
     AuthModule,
     CoursesModule,
     BranchesModule,
-    CompanyRolesModule
+    CompanyRolesModule,
+    UserCompanyRolesModule,
+    CompanyRoleAuthoritiesModule
   ],
   controllers: [AppController],
   providers: [

@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Authority extends Document {
-  @Prop({ type: String, unique: true, lowercase: true })
+  @Prop({ type: String, unique: true })
   name: string;
   
   @Prop({ type: String })

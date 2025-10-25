@@ -1,6 +1,6 @@
 import { IsString, MaxLength } from 'class-validator';
 
-export class DeleteAuthorityParamsReqDto {
+export class DeleteCompanyRoleAuthorityParamsReqDto {
   @IsString({ message: 'NAME_NEED_TO_BE_STRING' })
   @MaxLength(100, { message: 'NAME_IS_TOO_LONG' })
   company_role_id: string;

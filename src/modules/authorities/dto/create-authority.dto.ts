@@ -1,7 +1,8 @@
 import { IsString, IsEmail, MaxLength } from 'class-validator';
+import mongoose from 'mongoose';
 
 export class CreateAuthorityDto {
-  @IsEmail({}, { message: 'NAME_IS_INVALID' })
+  @IsString({ message: 'NAME_NEED_TO_BE_STRING' })
   @MaxLength(100, { message: 'NAME_IS_TOO_LONG' })
   name: string;
 
@@ -10,5 +11,5 @@ export class CreateAuthorityDto {
   description: string;
 
   @IsString({ message: 'AUTHORITY_CATEGORY_ID_NEED_TO_BE_STRING' })
-  authority_category_id: string;
+  authority_category_id: mongoose.Schema.Types.ObjectId;
 }

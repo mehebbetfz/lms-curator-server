@@ -1,9 +1,9 @@
-import { UserCompaniesResDto } from './user-companies-res.dto';
-import { UserCoursesResDto } from './user-courses-res.dto';
-import { UserBranchesResDto } from './user-branches-res.dto';
+import { UserCompaniesReqDto } from './user-companies-req.dto';
+import { UserCoursesReqDto } from './user-courses-req.dto';
+import { UserBranchesReqDto } from './user-branches-req.dto';
 
-export class UserContextsResDto {
-  companies: UserCompaniesResDto[];
-  courses: UserCoursesResDto[];
-  branches: UserBranchesResDto[];
+export class UserContextsReqDto {
+  companies: UserCompaniesReqDto[];
+  courses: UserCoursesReqDto[];
+  branches: UserBranchesReqDto[];
 }

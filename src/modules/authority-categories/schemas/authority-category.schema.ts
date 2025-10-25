@@ -3,7 +3,7 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class AuthorityCategory extends Document {
-  @Prop({ type: String, unique: true, lowercase: true })
+  @Prop({ type: String, unique: true })
   name: string;
 }
 
