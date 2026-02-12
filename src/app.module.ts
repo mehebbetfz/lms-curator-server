@@ -1,25 +1,27 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TerminusModule } from '@nestjs/terminus';
-import { CoreModule } from './core/modules/core.module';
-import { UsersModule } from './modules/users/users.module';
-import { AuthoritiesModule } from './modules/authorities/authorities.module';
-import { AuthorityCategoriesModule } from './modules/authority-categories/authority-categories.module';
-import { CompaniesModule } from './modules/companies/companies.module';
-import { SchoolsModule } from './modules/schools/schools.module';
-import { BranchesModule } from './modules/branches/branches.module';
-import { UserCompanyRolesModule } from './modules/user-company-roles/user-company-roles.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { CoursesModule } from './modules/courses/courses.module';
-import {
-  CompanyRolesModule
-} from './modules/company-roles/company-roles.module';
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
+import { MongooseModule } from '@nestjs/mongoose'
+import { TerminusModule } from '@nestjs/terminus'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { JwtAuthGuard } from './core/guards/auth.guard'
+import { CoreModule } from './core/modules/core.module'
+import { AuthModule } from './modules/auth/auth.module'
+import { AuthoritiesModule } from './modules/authorities/authorities.module'
+import { AuthorityCategoriesModule } from './modules/authority-categories/authority-categories.module'
+import { BranchesModule } from './modules/branches/branches.module'
+import { CompaniesModule } from './modules/companies/companies.module'
 import {
   CompanyRoleAuthoritiesModule
-} from './modules/company-role-authorities/company-role-authorities.module';
+} from './modules/company-role-authorities/company-role-authorities.module'
+import {
+  CompanyRolesModule
+} from './modules/company-roles/company-roles.module'
+import { CoursesModule } from './modules/courses/courses.module'
+import { SchoolsModule } from './modules/schools/schools.module'
+import { UserCompanyRolesModule } from './modules/user-company-roles/user-company-roles.module'
+import { UsersModule } from './modules/users/users.module'
 
 @Module({
   imports: [
@@ -36,12 +38,12 @@ import {
         retryDelay: 3000,
         connectionFactory: (connection) => {
           connection.on('connected', () => {
-            console.log('✅ Connected to external MongoDB ');
-          });
+            console.log('✅ Connected to external MongoDB ')
+          })
           connection.on('error', (error) => {
-            console.error('❌ MongoDB connection error:', error);
-          });
-          return connection;
+            console.error('❌ MongoDB connection error:', error)
+          })
+          return connection
         },
       }),
       inject: [ConfigService],
@@ -63,11 +65,11 @@ import {
   ],
   controllers: [AppController],
   providers: [
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     AppService,
   ],
 })
-export class AppModule {}
+export class AppModule { }
