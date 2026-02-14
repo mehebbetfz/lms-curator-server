@@ -1,15 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class AuthResponse {
   @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
-  accessToken: string;
-  
+  accessToken: string
+
   @ApiProperty({ example: 'refresh_token_string_here' })
-  refreshToken: string;
-  
+  refreshToken: string
+
   @ApiProperty({ example: 3600 })
-  expiresIn: number;
-  
+  expiresIn: number
+
   @ApiProperty({
     example: {
       id: '507f1f77bcf86cd799439011',
@@ -20,13 +20,13 @@ export class AuthResponse {
     }
   })
   user: {
-    id: string;
-    username: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-  };
-  
+    id: string
+    username: string
+    email: string
+    firstName: string
+    lastName: string
+  }
+
   @ApiProperty({
     required: false,
     example: {
@@ -36,8 +36,11 @@ export class AuthResponse {
     }
   })
   context?: {
-    companyId?: string;
-    courseId?: string;
-    branchId?: string;
-  };
+    companyId?: string
+    courseId?: string
+    branchId?: string
+  }
+
+  @ApiProperty()
+  authorities?: string[]
 }

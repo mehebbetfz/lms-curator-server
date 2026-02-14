@@ -208,10 +208,7 @@ export class AuthService {
       'userCompanyRoles.status': 'ACTIVE', // если есть поле статуса
     }
 
-    // Добавляем фильтрацию по контексту
-    if (context?.companyId) {
-      matchStage['userCompanyRoles.company_id'] = new Types.ObjectId(context.companyId)
-    }
+
     if (context?.courseId) {
       matchStage['userCompanyRoles.course_id'] = new Types.ObjectId(context.courseId)
     }

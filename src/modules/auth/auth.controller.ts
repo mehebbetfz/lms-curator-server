@@ -95,6 +95,7 @@ export class AuthController {
       request.user.id,
       context,
     )
+    console.log(authorities)
 
     return {
       id: request.user.id,
@@ -156,6 +157,15 @@ export class AuthController {
       context,
     )
 
+    console.log(context)
+
+
+    // Получаем authorities для выбранного контекста
+    const authorities = await this.authService.getUserAuthorities(
+      user._id.toString(),
+      context,
+    )
+
     return {
       ...tokens,
       user: {
@@ -166,6 +176,7 @@ export class AuthController {
         lastName: user.lastName,
       },
       context,
+      authorities: authorities.map(auth => auth.authority),
     }
   }
 
@@ -197,6 +208,12 @@ export class AuthController {
       context,
     )
 
+
+    const authorities = await this.authService.getUserAuthorities(
+      request.user.id,
+      context,
+    )
+
     return {
       ...tokens,
       user: {
@@ -207,6 +224,7 @@ export class AuthController {
         lastName: user.lastName,
       },
       context,
+      authorities: authorities.map(auth => auth.authority),
     }
   }
 

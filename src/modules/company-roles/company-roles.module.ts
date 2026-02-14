@@ -19,10 +19,6 @@ import { JwtAuthGuard } from '../../core/guards/auth.guard';
   controllers: [CompanyRolesController],
   providers: [
     CompanyRolesService,
-    {
-      provide: APP_GUARD,
-      useClass: RolePriorityGuard,
-    },
   ],
   exports: [CompanyRolesService, MongooseModule],
 })

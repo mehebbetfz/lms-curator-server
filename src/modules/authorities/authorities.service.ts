@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { BaseService } from '../../core/services/base.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
-import { Authority } from './schemas/authority.schema';
-import { AuthorityFindParamsReqDto } from './dto/authority-find-params-req.dto';
-import { parsePaginationParams } from '../../core/utils/parse-pagination.util';
-import { Context } from '../../core/dto/context.dto';
-import { CompanyRole } from '../company-roles/schemas/company-role.schema';
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { FilterQuery, Model, Types } from 'mongoose'
+import { Context } from '../../core/dto/context.dto'
+import { BaseService } from '../../core/services/base.service'
+import { parsePaginationParams } from '../../core/utils/parse-pagination.util'
+import { CompanyRole } from '../company-roles/schemas/company-role.schema'
+import { AuthorityFindParamsReqDto } from './dto/authority-find-params-req.dto'
+import { Authority } from './schemas/authority.schema'
 
 @Injectable()
 export class AuthoritiesService extends BaseService<Authority> {
@@ -16,63 +16,65 @@ export class AuthoritiesService extends BaseService<Authority> {
     @InjectModel(CompanyRole.name)
     private readonly companyRoleModel: Model<CompanyRole>,
   ) {
-    super(authorityModel, Authority.name);
+    super(authorityModel, Authority.name)
   }
-  
+
+
   async findCategoryAuthorities(
     context: Context,
     modelFilter: FilterQuery<AuthorityFindParamsReqDto>,
     params?: Record<string, unknown>,
   ) {
-    const company_id = context.companyId;
-    const { page, limit } = parsePaginationParams(params);
-    const skip = (page - 1) * limit;
-    
-    const modifiedFilter = this.applyPartialMatch(modelFilter);
-    
-    // Получаем все активные роли компании
+    const { companyId, courseId, branchId } = context
+    const { page, limit } = parsePaginationParams(params)
+    const skip = (page - 1) * limit
+
+    const modifiedFilter = this.applyPartialMatch(modelFilter)
+
     const companyRoles = await this.companyRoleModel
-      .find({ company_id: company_id })
+      .find({ company_id: new Types.ObjectId(companyId) })
       .select('name _id')
       .lean()
-      .exec();
-    
-    const roleIds = companyRoles.map(role => role._id);
-    const roleMap = Object.fromEntries(
-      companyRoles.map(role => [role._id.toString(), role.name])
-    );
-    
+      .exec()
+
+    const roleIds = companyRoles.map(role => role._id)
+
+    // Строгие условия: если поле контекста задано, то точное совпадение;
+    // если не задано, то ожидаем null в базе.
+    const conditions: any[] = [
+      { $eq: ['$authority_id', '$$authority_id'] },
+      { $in: ['$company_role_id', roleIds] }
+    ]
+
+    // course_id
+    if (courseId) {
+      conditions.push({ $eq: ['$course_id', new Types.ObjectId(courseId)] })
+    } else {
+      conditions.push({ $eq: ['$course_id', null] })
+    }
+
+    // branch_id
+    if (branchId) {
+      conditions.push({ $eq: ['$branch_id', new Types.ObjectId(branchId)] })
+    } else {
+      conditions.push({ $eq: ['$branch_id', null] })
+    }
+
+    const pipelineMatch = {
+      $expr: { $and: conditions }
+    }
+
     const [authorities, total] = await Promise.all([
       this.authorityModel.aggregate([
         { $match: modifiedFilter },
-        // Ищем связанные CompanyRoleAuthority
         {
           $lookup: {
             from: 'companyroleauthorities',
             let: { authority_id: '$_id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ['$authority_id', '$$authority_id'] }
-                }
-              }
-            ],
+            pipeline: [{ $match: pipelineMatch }],
             as: 'access_records',
           },
         },
-        // Фильтруем access_records только для ролей текущей компании
-        {
-          $addFields: {
-            access_records: {
-              $filter: {
-                input: '$access_records',
-                as: 'access',
-                cond: { $in: ['$$access.company_role_id', roleIds] }
-              }
-            }
-          }
-        },
-        // Формируем структуру с доступом для каждой роли
         {
           $project: {
             _id: 1,
@@ -93,9 +95,7 @@ export class AuthoritiesService extends BaseService<Authority> {
                           $filter: {
                             input: '$access_records',
                             as: 'access',
-                            cond: {
-                              $eq: ['$$access.company_role_id', '$$role._id']
-                            }
+                            cond: { $eq: ['$$access.company_role_id', '$$role._id'] }
                           }
                         }
                       },
@@ -112,8 +112,8 @@ export class AuthoritiesService extends BaseService<Authority> {
         { $sort: { name: 1 } },
       ]),
       this.authorityModel.countDocuments(modifiedFilter),
-    ]);
-    
+    ])
+
     const models = authorities.map((authority) => {
       const authorityData: any = {
         authority_id: authority._id,
@@ -121,22 +121,19 @@ export class AuthoritiesService extends BaseService<Authority> {
         description: authority.description,
         authority_category_id: authority.authority_category_id,
         roles: {}
-      };
-      
+      }
       authority.role_access.forEach((access) => {
         authorityData.roles[access.role_name] = {
           has_access: access.has_access,
           company_role_id: access.company_role_id,
-        };
-      });
-      
-      return authorityData;
-    });
-    
-    return {
-      models,
-      total,
-    };
+          branch_id: access.branch_id,
+          course_id: access.course_id
+        }
+      })
+      return authorityData
+    })
+
+    return { models, total }
   }
-  
+
 }
