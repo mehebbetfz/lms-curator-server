@@ -21,8 +21,8 @@ export class BranchesController {
   
   @Post()
   // @Authorities('COMPANY_CREATE')
-  async create(@Body() createBranchDto: CreateBranchDto) {
-    return this.branchesService.create(createBranchDto);
+  async create(@Body() createBranchDto: CreateBranchDto, @Req() req: any) {
+    return this.branchesService.create(createBranchDto, req.user.currentContext);
   }
   
   @Get()

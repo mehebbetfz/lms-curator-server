@@ -17,8 +17,8 @@ export class AuthoritiesController {
   
   @Post()
   // @Authorities('AUTHORITY_CREATE')
-  async create(@Body() createAuthorityDto: CreateAuthorityDto) {
-    return this.authoritiesService.create(createAuthorityDto);
+  async create(@Body() createAuthorityDto: CreateAuthorityDto, @Req() req: any) {
+    return this.authoritiesService.create(createAuthorityDto, req.user.currentContext);
   }
   
   @Get()

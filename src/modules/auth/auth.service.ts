@@ -200,27 +200,35 @@ export class AuthService {
 
   async getUserAuthorities(
     userId: string,
-    context?: HierarchyContext,
+    context: HierarchyContext, // обязателен для ограничения контекста
   ): Promise<ContextualAuthority[]> {
-    // Базовые условия фильтрации
+    // Всегда фильтруем только активные назначения ролей
     const matchStage: any = {
-      'userCompanyRoles.user_id': new Types.ObjectId(userId),
-      'userCompanyRoles.status': 'ACTIVE', // если есть поле статуса
+      'userCompanyRoles.status': 'ACTIVE',
     }
 
-
-    if (context?.courseId) {
+    // Добавляем фильтры по переданным полям контекста
+    if (context.companyId) {
+      matchStage['userCompanyRoles.company_id'] = new Types.ObjectId(context.companyId)
+    }
+    if (context.courseId) {
       matchStage['userCompanyRoles.course_id'] = new Types.ObjectId(context.courseId)
     }
-    if (context?.branchId) {
+    if (context.branchId) {
       matchStage['userCompanyRoles.branch_id'] = new Types.ObjectId(context.branchId)
     }
 
+    // Если контекст пуст (нет ни одного ID), возвращаем пустой массив
+    if (Object.keys(matchStage).length === 1) { // только status
+      return []
+    }
+
+    console.log('Building match stage for authorities:', { userId, context })
+
     const authorities = await this.userModel.aggregate([
-      // Шаг 1: Находим пользователя
       { $match: { _id: new Types.ObjectId(userId) } },
 
-      // Шаг 2: Соединяем с user_company_roles
+      // Присоединяем userCompanyRoles
       {
         $lookup: {
           from: 'usercompanyroles',
@@ -231,10 +239,10 @@ export class AuthService {
       },
       { $unwind: '$userCompanyRoles' },
 
-      // Шаг 3: Фильтруем по контексту и статусу
+      // Применяем фильтр по статусу и контексту
       { $match: matchStage },
 
-      // Шаг 4: Соединяем с company_roles
+      // Присоединяем companyroles
       {
         $lookup: {
           from: 'companyroles',
@@ -245,18 +253,46 @@ export class AuthService {
       },
       { $unwind: '$companyRole' },
 
-      // Шаг 5: Соединяем с companyroleauthorities
+      // Присоединяем companyroleauthorities с учётом branch_id и course_id
       {
         $lookup: {
           from: 'companyroleauthorities',
-          localField: 'companyRole._id',
-          foreignField: 'company_role_id',
+          let: {
+            roleId: '$companyRole._id',
+            branchId: '$userCompanyRoles.branch_id',
+            courseId: '$userCompanyRoles.course_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$company_role_id', '$$roleId'] },
+                    // Сравниваем branch_id: либо совпадает с контекстом, либо разрешено для всех (null)
+                    {
+                      $or: [
+                        { $eq: ['$branch_id', '$$branchId'] },
+                        { $eq: ['$branch_id', null] },
+                      ],
+                    },
+                    // Сравниваем course_id аналогично
+                    {
+                      $or: [
+                        { $eq: ['$course_id', '$$courseId'] },
+                        { $eq: ['$course_id', null] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
           as: 'companyRoleAuthorities',
         },
       },
-      { $unwind: '$companyRoleAuthorities' },
+      { $unwind: { path: '$companyRoleAuthorities', preserveNullAndEmptyArrays: false } },
 
-      // Шаг 6: Соединяем с authorities
+      // Присоединяем authorities
       {
         $lookup: {
           from: 'authorities',
@@ -267,7 +303,7 @@ export class AuthService {
       },
       { $unwind: '$authority' },
 
-      // Шаг 7: Формируем результат
+      // Формируем результат
       {
         $project: {
           authority: '$authority.name',
@@ -280,7 +316,7 @@ export class AuthService {
         },
       },
 
-      // Шаг 8: Убираем дубликаты
+      // Группируем для удаления дубликатов
       {
         $group: {
           _id: {
@@ -289,18 +325,18 @@ export class AuthService {
             courseId: '$context.courseId',
             branchId: '$context.branchId',
           },
-          context: { $first: '$context' }
-        }
+          context: { $first: '$context' },
+        },
       },
 
-      // Шаг 9: Форматируем результат
+      // Финальный формат
       {
         $project: {
           _id: 0,
           authority: '$_id.authority',
-          context: 1
-        }
-      }
+          context: 1,
+        },
+      },
     ])
 
     return authorities

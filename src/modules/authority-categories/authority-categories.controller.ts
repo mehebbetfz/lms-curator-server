@@ -26,8 +26,8 @@ export class AuthorityCategoriesController {
   
   @Post()
   // @Authorities('COURSE_CREATE')
-  async create(@Body() createAuthorityCategoryDto: CreateAuthorityCategoryDto) {
-    return this.authorityCategoriesService.create(createAuthorityCategoryDto);
+  async create(@Body() createAuthorityCategoryDto: CreateAuthorityCategoryDto, @Req() req: any) {
+    return this.authorityCategoriesService.create(createAuthorityCategoryDto, req.user.currentContext);
   }
   
   @Get()

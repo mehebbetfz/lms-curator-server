@@ -20,8 +20,8 @@ export class CompaniesController {
   
   @Post()
   // @Authorities('COMPANY_CREATE')
-  async create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companiesService.create(createCompanyDto);
+  async create(@Body() createCompanyDto: CreateCompanyDto, @Req() req: any) {
+    return this.companiesService.create(createCompanyDto, req.user.currentContext);
   }
   
   @Get()

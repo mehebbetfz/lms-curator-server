@@ -28,15 +28,7 @@ export class CompanyRoleAuthoritiesController {
   @Post()
   // @Authorities('COMPANY_ROLE_AUTHORITY_CREATE')
   async create(@Body() createCompanyRoleAuthorityDto: CreateCompanyRoleAuthorityDto, @Req() req: any) {
-    const data = {
-      ...createCompanyRoleAuthorityDto,
-      company_id: req.user.currentContext.companyId,
-      course_id: req.user.currentContext.courseId,
-      branch_id: req.user.currentContext.branchId,
-    }
-
-    console.log("Creating company role authority with data:", data) // Логируем данные для отладки
-    return this.companyRoleAuthoritiesService.create(data)
+    return this.companyRoleAuthoritiesService.create(createCompanyRoleAuthorityDto, req.user.currentContext)
   }
 
   @Get()

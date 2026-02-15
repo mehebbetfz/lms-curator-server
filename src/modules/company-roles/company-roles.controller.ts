@@ -6,10 +6,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards
 } from '@nestjs/common'
 import { JwtAuthGuard } from '../../core/guards/auth.guard'
-import { RolePriorityGuard } from '../../core/guards/role-priority.guard'
 import { CompanyRolesService } from './company-roles.service'
 import {
   CompanyRoleFindParamsReqDto
@@ -18,14 +18,14 @@ import { CreateCompanyRoleDto } from './dto/create-company-role.dto'
 import { UpdateCompanyRoleDto } from './dto/update-company-role.dto'
 
 @Controller('company-roles')
-@UseGuards(JwtAuthGuard, RolePriorityGuard)
+@UseGuards(JwtAuthGuard)
 export class CompanyRolesController {
   constructor(private readonly companyRolesService: CompanyRolesService) { }
 
   @Post()
   // @Authorities('COMPANY_ROLE_CREATE')
-  async create(@Body() createCompanyRoleDto: CreateCompanyRoleDto) {
-    return this.companyRolesService.create(createCompanyRoleDto)
+  async create(@Body() createCompanyRoleDto: CreateCompanyRoleDto, @Req() req: any) {
+    return this.companyRolesService.create(createCompanyRoleDto, req.user.currentContext)
   }
 
   @Get()

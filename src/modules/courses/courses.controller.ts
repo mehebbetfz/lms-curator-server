@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CourseFindParamsReqDto } from './dto/course-find-params-req-dto.dto';
 import { CoursesService } from './courses.service';
@@ -20,8 +21,8 @@ export class CoursesController {
   
   @Post()
   // @Authorities('COURSE_CREATE')
-  async create(@Body() createCourseDto: CreateCourseDto) {
-    return this.coursesService.create(createCourseDto);
+  async create(@Body() createCourseDto: CreateCourseDto, @Req() req: any) {
+    return this.coursesService.create(createCourseDto, req.user.currentContext);
   }
   
   @Get()
