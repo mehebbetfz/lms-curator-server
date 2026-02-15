@@ -8,7 +8,7 @@ export class SchoolsController {
   constructor(private readonly schoolsService: SchoolsService) {}
   
   @Post()
-  @Authorities('SCHOOL_CREATE')
+  @Authorities('')
   async create(@Req() req: any, @Body() createSchoolDto: CreateSchoolDto) {
     const userId = req.user['userId'];
     return this.schoolsService.create(userId, createSchoolDto);

@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CourseFindParamsReqDto } from './dto/course-find-params-req-dto.dto';
 import { CoursesService } from './courses.service';
@@ -19,26 +20,26 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
   
   @Post()
-  // @Authorities('COURSE_CREATE')
-  async create(@Body() createCourseDto: CreateCourseDto) {
-    return this.coursesService.create(createCourseDto);
+  // @Authorities('')
+  async create(@Body() createCourseDto: CreateCourseDto, @Req() req: any) {
+    return this.coursesService.create(createCourseDto, req.user.currentContext);
   }
   
   @Get()
-  // @Authorities('COURSE_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: CourseFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.coursesService.find(searchParams, { page, limit });
   }
   
   @Get(':id')
-  // @Authorities('COURSE_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.coursesService.findById(id);
   }
   
   @Patch(':id')
-  // @Authorities('COURSE_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
@@ -47,7 +48,7 @@ export class CoursesController {
   }
   
   @Delete(':id')
-  // @Authorities('COURSE_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.coursesService.deleteOne({ _id: id });
   }

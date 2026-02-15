@@ -1,51 +1,59 @@
 import {
-  Logger,
-  InternalServerErrorException,
   ConflictException,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
-} from '@nestjs/common';
+} from '@nestjs/common'
 import mongoose, {
   ClientSession,
   FilterQuery,
   Model,
   UpdateQuery,
-} from 'mongoose';
-import { Context } from '../dto/context.dto';
+} from 'mongoose'
+import { Context } from '../dto/context.dto'
 
 export class BaseService<T> {
-  protected readonly logger: Logger;
+  protected readonly logger: Logger
 
   constructor(
     protected readonly model: Model<T>,
     modelName: string,
   ) {
-    this.logger = new Logger(modelName);
+    this.logger = new Logger(modelName)
   }
 
   async create(
     createData: Partial<T>,
+    constext: Context,
     uniqueCheckFilter?: FilterQuery<T>,
     session?: ClientSession,
   ): Promise<T> {
     try {
+
+      const data = {
+        ...createData,
+        company_id: constext.companyId,
+        course_id: constext.courseId,
+        branch_id: constext.branchId,
+      }
       // Проверка на уникальность, если передан фильтр
       if (uniqueCheckFilter) {
         const existing = await this.model
           .findOne(uniqueCheckFilter, null, { session })
-          .exec();
+          .exec()
         if (existing) {
-          throw new ConflictException('RECORD_ALREADY_EXISTS');
+          throw new ConflictException('RECORD_ALREADY_EXISTS')
         }
       }
-      
-      const newDocument = new this.model(createData);
-      return (await newDocument.save({ session })) as T;
+
+      const newDocument = new this.model(data)
+      return (await newDocument.save({ session })) as T
     } catch (error) {
       if (error instanceof ConflictException) {
-        throw error;
+        throw error
       }
-      this.logger.error(`Ошибка при create(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при create()');
+      this.logger.error(`Ошибка при create(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при create()')
     }
   }
 
@@ -57,27 +65,27 @@ export class BaseService<T> {
   ): Promise<T> {
     try {
       // Добавляем информацию о пользователе, который обновляет
-      const dataWithUser = userId 
+      const dataWithUser = userId
         ? { ...updateData, updated_by: userId, updated_at: new Date() }
-        : updateData;
+        : updateData
 
       const updatedDocument = await this.model.findByIdAndUpdate(
         id,
         dataWithUser,
         { new: true, runValidators: true, session }
-      ).exec();
+      ).exec()
 
       if (!updatedDocument) {
-        throw new NotFoundException('Документ не найден');
+        throw new NotFoundException('Документ не найден')
       }
 
-      return updatedDocument;
+      return updatedDocument
     } catch (error) {
       if (error instanceof NotFoundException) {
-        throw error;
+        throw error
       }
-      this.logger.error(`Ошибка при update(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при update()');
+      this.logger.error(`Ошибка при update(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при update()')
     }
   }
 
@@ -87,50 +95,50 @@ export class BaseService<T> {
     projection?: Record<string, unknown>,
   ): Promise<{ models: T[]; total: number }> {
     try {
-      const page = params?.page ? Math.max(1, Number(params.page)) : null;
-      const limit = params?.limit ? Math.max(1, Number(params.limit)) : null;
-      const skip = page && limit ? (page - 1) * limit : 0;
+      const page = params?.page ? Math.max(1, Number(params.page)) : null
+      const limit = params?.limit ? Math.max(1, Number(params.limit)) : null
+      const skip = page && limit ? (page - 1) * limit : 0
 
-      const modifiedFilter = this.applyPartialMatch(modelFilter);
+      const modifiedFilter = this.applyPartialMatch(modelFilter)
 
       const modelsQuery = this.model
         .find(modifiedFilter, projection)
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limit || null)
-        .exec();
+        .exec()
 
-      const totalQuery = this.model.countDocuments(modifiedFilter).exec();
+      const totalQuery = this.model.countDocuments(modifiedFilter).exec()
 
-      const models = await modelsQuery;
-      const total = await totalQuery;
+      const models = await modelsQuery
+      const total = await totalQuery
 
       this.logger.log(
         `Найдено ${models.length} документ(ов) на странице ${page} из ${total}`,
-      );
+      )
 
-      return { models, total };
+      return { models, total }
     } catch (error) {
-      this.logger.error(`Ошибка при find(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при find()');
+      this.logger.error(`Ошибка при find(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при find()')
     }
   }
 
   async findOne(filter: FilterQuery<T>): Promise<T | null> {
     try {
-      return await this.model.findOne(filter).exec();
+      return await this.model.findOne(filter).exec()
     } catch (error) {
-      this.logger.error(`Ошибка при findOne(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при findOne()');
+      this.logger.error(`Ошибка при findOne(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при findOne()')
     }
   }
 
   async findById(id: string): Promise<T | null> {
     try {
-      return await this.model.findById(id).exec();
+      return await this.model.findById(id).exec()
     } catch (error) {
-      this.logger.error(`Ошибка при findById(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при findById()');
+      this.logger.error(`Ошибка при findById(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при findById()')
     }
   }
 
@@ -141,13 +149,13 @@ export class BaseService<T> {
     session?: ClientSession,
   ): Promise<T | null> {
     try {
-      const data = { ...updateData, updated_by: userId };
+      const data = { ...updateData, updated_by: userId }
       return await this.model
         .findOneAndUpdate(filter, data, { new: true, session })
-        .exec();
+        .exec()
     } catch (error) {
-      this.logger.error(`Ошибка при findOneAndUpdate(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при findOneAndUpdate()');
+      this.logger.error(`Ошибка при findOneAndUpdate(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при findOneAndUpdate()')
     }
   }
 
@@ -158,12 +166,12 @@ export class BaseService<T> {
     session?: ClientSession,
   ): Promise<boolean> {
     try {
-      const data = { ...updateData, updated_by: userId };
-      const result = await this.model.updateMany(filter, data, { session });
-      return result.modifiedCount > 0;
+      const data = { ...updateData, updated_by: userId }
+      const result = await this.model.updateMany(filter, data, { session })
+      return result.modifiedCount > 0
     } catch (error) {
-      this.logger.error(`Ошибка при updateMany(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при updateMany()');
+      this.logger.error(`Ошибка при updateMany(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при updateMany()')
     }
   }
 
@@ -171,12 +179,13 @@ export class BaseService<T> {
     filter: FilterQuery<T>,
     session?: ClientSession,
   ): Promise<boolean> {
+    console.log("deleteOne filter:", filter)
     try {
-      const result = await this.model.deleteOne(filter, { session }).exec();
-      return result.deletedCount === 1;
+      const result = await this.model.deleteOne(filter, { session }).exec()
+      return result.deletedCount === 1
     } catch (error) {
-      this.logger.error(`Ошибка при deleteOne(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при deleteOne()');
+      this.logger.error(`Ошибка при deleteOne(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при deleteOne()')
     }
   }
 
@@ -185,11 +194,11 @@ export class BaseService<T> {
     session?: ClientSession,
   ): Promise<number> {
     try {
-      const result = await this.model.deleteMany(filter, { session }).exec();
-      return result.deletedCount ?? 0;
+      const result = await this.model.deleteMany(filter, { session }).exec()
+      return result.deletedCount ?? 0
     } catch (error) {
-      this.logger.error(`Ошибка при deleteMany(): ${error.message}`);
-      throw new InternalServerErrorException('Ошибка при deleteMany()');
+      this.logger.error(`Ошибка при deleteMany(): ${error.message}`)
+      throw new InternalServerErrorException('Ошибка при deleteMany()')
     }
   }
 
@@ -198,32 +207,32 @@ export class BaseService<T> {
       typeof value === 'string' &&
       mongoose.Types.ObjectId.isValid(value) &&
       String(new mongoose.Types.ObjectId(value)) === value
-    );
+    )
   }
 
   protected applyPartialMatch(
     modelFilter: FilterQuery<T>,
   ): Record<string, any> {
-    const newFilter: Record<string, any> = {};
-    const regexExcludedFields = ['status', 'type', 'category'];
-    const skipFields = ['min_balance', 'max_balance', 'page', 'limit'];
+    const newFilter: Record<string, any> = {}
+    const regexExcludedFields = ['status', 'type', 'category']
+    const skipFields = ['min_balance', 'max_balance', 'page', 'limit']
 
     for (const key in modelFilter) {
-      if (skipFields.includes(key)) continue;
+      if (skipFields.includes(key)) continue
 
-      const value = (modelFilter as any)[key];
+      const value = (modelFilter as any)[key]
       if (this.isObjectIdStrict(value)) {
-        newFilter[key] = new mongoose.Types.ObjectId(value);
+        newFilter[key] = new mongoose.Types.ObjectId(value)
       } else if (
         typeof value === 'string' &&
         !regexExcludedFields.includes(key)
       ) {
-        newFilter[key] = new RegExp(value, 'i');
+        newFilter[key] = new RegExp(value, 'i')
       } else {
-        newFilter[key] = value;
+        newFilter[key] = value
       }
     }
 
-    return newFilter;
+    return newFilter
   }
 }

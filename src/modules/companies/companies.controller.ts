@@ -19,26 +19,26 @@ export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
   
   @Post()
-  // @Authorities('COMPANY_CREATE')
-  async create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companiesService.create(createCompanyDto);
+  // @Authorities('')
+  async create(@Body() createCompanyDto: CreateCompanyDto, @Req() req: any) {
+    return this.companiesService.create(createCompanyDto, req.user.currentContext);
   }
   
   @Get()
-  // @Authorities('COMPANY_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: CompanyFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.companiesService.find(searchParams, { page, limit });
   }
   
   @Get(':id')
-  // @Authorities('COMPANY_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.companiesService.findById(id);
   }
   
   @Patch(':id')
-  // @Authorities('COMPANY_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateCompanyDto: UpdateCompanyDto,
@@ -47,7 +47,7 @@ export class CompaniesController {
   }
   
   @Delete(':id')
-  // @Authorities('COMPANY_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.companiesService.deleteOne({ _id: id });
   }

@@ -1,7 +1,10 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserCompanyRoleDto } from './create-user-company-role.dto';
+import { PartialType } from '@nestjs/mapped-types'
+import mongoose from 'mongoose'
+import { CreateUserCompanyRoleDto } from './create-user-company-role.dto'
 
 export class UserCompanyRoleFindParamsReqDto extends PartialType(CreateUserCompanyRoleDto) {
-    page: number;
-    limit: number;
+    status: string
+    user_id: mongoose.Schema.Types.ObjectId
+    page: number
+    limit: number
 }

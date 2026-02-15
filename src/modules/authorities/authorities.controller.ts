@@ -16,20 +16,20 @@ export class AuthoritiesController {
   constructor(private readonly authoritiesService: AuthoritiesService) {}
   
   @Post()
-  // @Authorities('AUTHORITY_CREATE')
-  async create(@Body() createAuthorityDto: CreateAuthorityDto) {
-    return this.authoritiesService.create(createAuthorityDto);
+  // @Authorities('')
+  async create(@Body() createAuthorityDto: CreateAuthorityDto, @Req() req: any) {
+    return this.authoritiesService.create(createAuthorityDto, req.user.currentContext);
   }
   
   @Get()
-  // @Authorities('AUTHORITY_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: AuthorityFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.authoritiesService.find(searchParams, { page, limit });
   }
   
   @Get('/category')
-  // @Authorities('AUTHORITY_READ_MANY')
+  // @Authorities('')
   async findCategoryAuthorities(@Req() req: any, @Query() query: AuthorityFindParamsReqDto) {
     const context = req.user.currentContext;
     const { page, limit, ...searchParams } = query;
@@ -37,13 +37,13 @@ export class AuthoritiesController {
   }
   
   @Get(':id')
-  // @Authorities('AUTHORITY_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.authoritiesService.findById(id);
   }
   
   @Patch(':id')
-  // @Authorities('AUTHORITY_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateAuthorityDto: UpdateAuthorityDto,
@@ -52,7 +52,7 @@ export class AuthoritiesController {
   }
   
   @Delete(':id')
-  // @Authorities('AUTHORITY_DELETE_ONE')
+  // @Authorities('')
   async deleteById(@Param('id') id: string) {
     return await this.authoritiesService.deleteOne({ _id: id });
   }

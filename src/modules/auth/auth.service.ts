@@ -1,26 +1,26 @@
 import {
   Injectable,
-  UnauthorizedException,
   Logger,
-} from '@nestjs/common';
-import { TokenPayload } from './interfaces/token-payload.interface';
-import { User } from '../users/schemas/user.schema';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { AuthToken } from './schemas/auth-token.schema';
-import mongoose, { Model, Types } from 'mongoose';
-import { ConfigService } from '@nestjs/config';
-import { randomBytes, scryptSync } from 'crypto';
-import { ContextualAuthority } from './interfaces/contextual-authority.interface';
-import { UserStatus } from '../../core/enums/user-status.enum';
-import { HierarchyContext } from '../../core/interfaces/hierarchy-context.interface';
-import { UserCompanyRole } from '../user-company-roles/schemas/user-company-role.schema';
+  UnauthorizedException,
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { JwtService } from '@nestjs/jwt'
+import { InjectModel } from '@nestjs/mongoose'
+import { randomBytes, scryptSync } from 'crypto'
+import mongoose, { Model, Types } from 'mongoose'
+import { UserRoleStatus } from '../../core/enums/user-role-status.enum'
+import { UserStatus } from '../../core/enums/user-status.enum'
+import { HierarchyContext } from '../../core/interfaces/hierarchy-context.interface'
+import { UserCompanyRole } from '../user-company-roles/schemas/user-company-role.schema'
+import { User } from '../users/schemas/user.schema'
+import { UserBranchesReqDto } from './dto/user-branches-req.dto'
 import {
   UserCompaniesReqDto,
-} from './dto/user-companies-req.dto';
-import { UserCoursesReqDto } from './dto/user-courses-req.dto';
-import { UserBranchesReqDto } from './dto/user-branches-req.dto';
-import { UserRoleStatus } from '../../core/enums/user-role-status.enum';
+} from './dto/user-companies-req.dto'
+import { UserCoursesReqDto } from './dto/user-courses-req.dto'
+import { ContextualAuthority } from './interfaces/contextual-authority.interface'
+import { TokenPayload } from './interfaces/token-payload.interface'
+import { AuthToken } from './schemas/auth-token.schema'
 
 @Injectable()
 export class AuthService {
@@ -33,59 +33,59 @@ export class AuthService {
     private userCompanyRoleModel: Model<UserCompanyRole>,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) {}
+  ) { }
 
   async validateUser(username: string, password: string): Promise<User> {
     const user = await this.userModel
       .findOne({ username })
       .select('+password')
-      .exec();
+      .exec()
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     // Разбираем хеш из формата "salt.hexHash"
-    const passwordParts = user.password.split('.');
+    const passwordParts = user.password.split('.')
 
     if (passwordParts.length !== 2) {
-      throw new UnauthorizedException('Invalid password format');
+      throw new UnauthorizedException('Invalid password format')
     }
 
-    const [salt, storedHash] = passwordParts;
+    const [salt, storedHash] = passwordParts
 
     // Генерируем хеш для введенного пароля с тем же salt
-    const hash = scryptSync(password, salt, 32) as Buffer;
-    const inputHash = hash.toString('hex');
+    const hash = scryptSync(password, salt, 32) as Buffer
+    const inputHash = hash.toString('hex')
 
     // Сравниваем хеши (защита от timing attacks)
-    const isPasswordValid = this.compareHashesTimingSafe(inputHash, storedHash);
+    const isPasswordValid = this.compareHashesTimingSafe(inputHash, storedHash)
 
-    console.log('Password validation result:', isPasswordValid);
+    console.log('Password validation result:', isPasswordValid)
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     if (user.status !== UserStatus.ACTIVE) {
-      throw new UnauthorizedException('Account is not active');
+      throw new UnauthorizedException('Account is not active')
     }
 
-    return user;
+    return user
   }
 
   // Защита от timing attacks
   private compareHashesTimingSafe(hash1: string, hash2: string): boolean {
     if (hash1.length !== hash2.length) {
-      return false;
+      return false
     }
 
-    let result = 0;
+    let result = 0
     for (let i = 0; i < hash1.length; i++) {
-      result |= hash1.charCodeAt(i) ^ hash2.charCodeAt(i);
+      result |= hash1.charCodeAt(i) ^ hash2.charCodeAt(i)
     }
 
-    return result === 0;
+    return result === 0
   }
 
   async login(
@@ -95,9 +95,9 @@ export class AuthService {
     ipAddress?: string,
     context?: HierarchyContext,
   ): Promise<any> {
-    const user = await this.validateUser(username, password);
 
-    const tokens = await this.generateTokens(user, userAgent, ipAddress, {});
+    const user = await this.validateUser(username, password)
+    const tokens = await this.generateTokens(user, userAgent, ipAddress, {})
 
     return {
       ...tokens,
@@ -109,25 +109,25 @@ export class AuthService {
         lastName: user.lastName,
       },
       context: {},
-    };
+    }
   }
 
   async refreshToken(refreshToken: string): Promise<any> {
     const tokenDoc = await this.authTokenModel
       .findOne({ refreshToken, revoked: false })
       .populate('userId')
-      .exec();
+      .exec()
 
     if (!tokenDoc || tokenDoc.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Invalid refresh token')
     }
 
-    const user = tokenDoc.userId as unknown as User;
+    const user = tokenDoc.userId as unknown as User
 
-    const tokens = await this.generateTokens(user);
+    const tokens = await this.generateTokens(user)
 
-    tokenDoc.revoked = true;
-    await tokenDoc.save();
+    tokenDoc.revoked = true
+    await tokenDoc.save()
 
     return {
       ...tokens,
@@ -138,13 +138,13 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
       },
-    };
+    }
   }
 
   async logout(refreshToken: string): Promise<void> {
     await this.authTokenModel
       .updateOne({ refreshToken }, { revoked: true })
-      .exec();
+      .exec()
   }
 
   async logoutAll(userId: string): Promise<void> {
@@ -153,7 +153,7 @@ export class AuthService {
         { userId: new Types.ObjectId(userId), revoked: false },
         { revoked: true },
       )
-      .exec();
+      .exec()
   }
 
   async generateTokens(
@@ -167,17 +167,17 @@ export class AuthService {
       username: user.username,
       email: user.email,
       currentContext: context,
-    };
+    }
 
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.generateRefreshToken();
+    const accessToken = this.jwtService.sign(payload)
+    const refreshToken = this.generateRefreshToken()
 
-    const expiresIn = this.configService.get<number>('JWT_EXPIRES_IN', 60);
-    const refreshTokenExpires = new Date();
+    const expiresIn = this.configService.get<number>('JWT_EXPIRES_IN', 60)
+    const refreshTokenExpires = new Date()
     refreshTokenExpires.setDate(
       refreshTokenExpires.getDate() +
-        this.configService.get<number>('REFRESH_TOKEN_EXPIRES_DAYS', 7),
-    );
+      this.configService.get<number>('REFRESH_TOKEN_EXPIRES_DAYS', 7),
+    )
 
     await this.authTokenModel.create({
       userId: user._id,
@@ -185,45 +185,50 @@ export class AuthService {
       expiresAt: refreshTokenExpires,
       userAgent,
       ipAddress,
-    });
+    })
 
     return {
       accessToken,
       refreshToken,
       expiresIn,
-    };
+    }
   }
 
   private generateRefreshToken(): string {
-    return randomBytes(64).toString('base64url');
+    return randomBytes(64).toString('base64url')
   }
-  
+
   async getUserAuthorities(
     userId: string,
-    context?: HierarchyContext,
+    context: HierarchyContext, // обязателен для ограничения контекста
   ): Promise<ContextualAuthority[]> {
-    // Базовые условия фильтрации
+    // Всегда фильтруем только активные назначения ролей
     const matchStage: any = {
-      'userCompanyRoles.user_id': new Types.ObjectId(userId),
-      'userCompanyRoles.status': 'ACTIVE', // если есть поле статуса
-    };
-    
-    // Добавляем фильтрацию по контексту
-    if (context?.companyId) {
-      matchStage['userCompanyRoles.company_id'] = new Types.ObjectId(context.companyId);
+      'userCompanyRoles.status': 'ACTIVE',
     }
-    if (context?.courseId) {
-      matchStage['userCompanyRoles.course_id'] = new Types.ObjectId(context.courseId);
+
+    // Добавляем фильтры по переданным полям контекста
+    if (context.companyId) {
+      matchStage['userCompanyRoles.company_id'] = new Types.ObjectId(context.companyId)
     }
-    if (context?.branchId) {
-      matchStage['userCompanyRoles.branch_id'] = new Types.ObjectId(context.branchId);
+    if (context.courseId) {
+      matchStage['userCompanyRoles.course_id'] = new Types.ObjectId(context.courseId)
     }
-    
+    if (context.branchId) {
+      matchStage['userCompanyRoles.branch_id'] = new Types.ObjectId(context.branchId)
+    }
+
+    // Если контекст пуст (нет ни одного ID), возвращаем пустой массив
+    if (Object.keys(matchStage).length === 1) { // только status
+      return []
+    }
+
+    console.log('Building match stage for authorities:', { userId, context })
+
     const authorities = await this.userModel.aggregate([
-      // Шаг 1: Находим пользователя
       { $match: { _id: new Types.ObjectId(userId) } },
-      
-      // Шаг 2: Соединяем с user_company_roles
+
+      // Присоединяем userCompanyRoles
       {
         $lookup: {
           from: 'usercompanyroles',
@@ -233,11 +238,11 @@ export class AuthService {
         },
       },
       { $unwind: '$userCompanyRoles' },
-      
-      // Шаг 3: Фильтруем по контексту и статусу
+
+      // Применяем фильтр по статусу и контексту
       { $match: matchStage },
-      
-      // Шаг 4: Соединяем с company_roles
+
+      // Присоединяем companyroles
       {
         $lookup: {
           from: 'companyroles',
@@ -247,19 +252,47 @@ export class AuthService {
         },
       },
       { $unwind: '$companyRole' },
-      
-      // Шаг 5: Соединяем с companyroleauthorities
+
+      // Присоединяем companyroleauthorities с учётом branch_id и course_id
       {
         $lookup: {
           from: 'companyroleauthorities',
-          localField: 'companyRole._id',
-          foreignField: 'company_role_id',
+          let: {
+            roleId: '$companyRole._id',
+            branchId: '$userCompanyRoles.branch_id',
+            courseId: '$userCompanyRoles.course_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$company_role_id', '$$roleId'] },
+                    // Сравниваем branch_id: либо совпадает с контекстом, либо разрешено для всех (null)
+                    {
+                      $or: [
+                        { $eq: ['$branch_id', '$$branchId'] },
+                        { $eq: ['$branch_id', null] },
+                      ],
+                    },
+                    // Сравниваем course_id аналогично
+                    {
+                      $or: [
+                        { $eq: ['$course_id', '$$courseId'] },
+                        { $eq: ['$course_id', null] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
           as: 'companyRoleAuthorities',
         },
       },
-      { $unwind: '$companyRoleAuthorities' },
-      
-      // Шаг 6: Соединяем с authorities
+      { $unwind: { path: '$companyRoleAuthorities', preserveNullAndEmptyArrays: false } },
+
+      // Присоединяем authorities
       {
         $lookup: {
           from: 'authorities',
@@ -269,8 +302,8 @@ export class AuthService {
         },
       },
       { $unwind: '$authority' },
-      
-      // Шаг 7: Формируем результат
+
+      // Формируем результат
       {
         $project: {
           authority: '$authority.name',
@@ -282,8 +315,8 @@ export class AuthService {
           },
         },
       },
-      
-      // Шаг 8: Убираем дубликаты
+
+      // Группируем для удаления дубликатов
       {
         $group: {
           _id: {
@@ -292,21 +325,21 @@ export class AuthService {
             courseId: '$context.courseId',
             branchId: '$context.branchId',
           },
-          context: { $first: '$context' }
-        }
+          context: { $first: '$context' },
+        },
       },
-      
-      // Шаг 9: Форматируем результат
+
+      // Финальный формат
       {
         $project: {
           _id: 0,
           authority: '$_id.authority',
-          context: 1
-        }
-      }
-    ]);
-    
-    return authorities;
+          context: 1,
+        },
+      },
+    ])
+
+    return authorities
   }
 
   async hasAuthority(
@@ -314,25 +347,25 @@ export class AuthService {
     authority: string,
     context?: HierarchyContext,
   ): Promise<boolean> {
-    const authorities = await this.getUserAuthorities(userId, context);
-    return authorities.some((auth) => auth.authority === authority);
+    const authorities = await this.getUserAuthorities(userId, context)
+    return authorities.some((auth) => auth.authority === authority)
   }
 
   async findUserById(userId: string): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
+    const user = await this.userModel.findById(userId).exec()
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('User not found')
     }
-    return user;
+    return user
   }
-  
+
   async validateUserContext(
     userId: string,
     context: HierarchyContext,
   ): Promise<boolean> {
     try {
-      console.log('Validating user context:', { userId, context });
-      
+      console.log('Validating user context:', { userId, context })
+
       const pipeline: any[] = [
         // 1. Находим активные роли пользователя
         {
@@ -341,7 +374,7 @@ export class AuthService {
             status: UserRoleStatus.ACTIVE
           }
         },
-        
+
         // 2. Join с companyroles чтобы получить company_id и другие данные
         {
           $lookup: {
@@ -352,14 +385,14 @@ export class AuthService {
           },
         },
         { $unwind: { path: '$companyRole', preserveNullAndEmptyArrays: true } },
-        
+
         // 3. Фильтруем по company_id если указан
         ...(context.companyId ? [{
           $match: {
             'companyRole.company_id': new Types.ObjectId(context.companyId)
           }
         }] : []),
-        
+
         // 4. Join с branches если нужно проверить branch_id
         ...(context.branchId ? [
           {
@@ -377,7 +410,7 @@ export class AuthService {
             }
           }
         ] : []),
-        
+
         // 5. Join с courses если нужно проверить course_id
         ...(context.courseId ? [
           {
@@ -395,7 +428,7 @@ export class AuthService {
             }
           }
         ] : []),
-        
+
         // 6. Проверяем наличие хотя бы одной подходящей роли
         { $limit: 1 },
         {
@@ -403,21 +436,21 @@ export class AuthService {
             hasAccess: { $literal: 1 },
           },
         }
-      ];
-      
-      const result = await this.userCompanyRoleModel.aggregate(pipeline).exec();
-      console.log('Validation result:', result);
-      
-      return result.length > 0;
-      
+      ]
+
+      const result = await this.userCompanyRoleModel.aggregate(pipeline).exec()
+      console.log('Validation result:', result)
+
+      return result.length > 0
+
     } catch (error) {
-      console.error('Error validating user context:', error);
-      return false;
+      console.error('Error validating user context:', error)
+      return false
     }
   }
 
   async getUsersCompanies(userId: string): Promise<UserCompaniesReqDto[]> {
-    const objectId = new mongoose.Types.ObjectId(userId);
+    const objectId = new mongoose.Types.ObjectId(userId)
 
     return this.userCompanyRoleModel.aggregate([
       { $match: { user_id: objectId } },
@@ -454,15 +487,15 @@ export class AuthService {
         },
       },
       { $sort: { name: 1 } },
-    ]);
+    ])
   }
-  
+
   async getUsersCourses(userId: string): Promise<UserCoursesReqDto[]> {
-    const objectId = new mongoose.Types.ObjectId(userId);
-    
+    const objectId = new mongoose.Types.ObjectId(userId)
+
     return this.userCompanyRoleModel.aggregate([
       { $match: { user_id: objectId, status: 'ACTIVE' } },
-      
+
       // Достаем конкретный курс по course_id
       {
         $lookup: {
@@ -473,7 +506,7 @@ export class AuthService {
         },
       },
       { $unwind: '$course' },
-      
+
       {
         $group: {
           _id: '$course._id',
@@ -481,18 +514,18 @@ export class AuthService {
           companyId: { $first: '$course.company_id' },
         },
       },
-      
+
       { $sort: { name: 1 } },
-    ]);
+    ])
   }
-  
-  
+
+
   async getUsersBranches(userId: string): Promise<UserBranchesReqDto[]> {
-    const objectId = new mongoose.Types.ObjectId(userId);
-    
+    const objectId = new mongoose.Types.ObjectId(userId)
+
     return this.userCompanyRoleModel.aggregate([
       { $match: { user_id: objectId, status: 'ACTIVE' } },
-      
+
       // Достаем branch_id напрямую
       {
         $lookup: {
@@ -503,7 +536,7 @@ export class AuthService {
         },
       },
       { $unwind: '$branch' },
-      
+
       // Достаем курс к которому принадлежит branch
       {
         $lookup: {
@@ -514,7 +547,7 @@ export class AuthService {
         },
       },
       { $unwind: '$course' },
-      
+
       {
         $group: {
           _id: '$branch._id',
@@ -525,9 +558,9 @@ export class AuthService {
           courseName: { $first: '$course.name' },
         },
       },
-      
+
       { $sort: { name: 1 } },
-    ]);
+    ])
   }
-  
+
 }

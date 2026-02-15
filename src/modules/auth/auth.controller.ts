@@ -2,23 +2,26 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Ip,
+  Get,
   Headers,
-  Post, Req, Get, UseGuards,
-} from '@nestjs/common';
-import { AuthResponse } from './dto/auth-response.dto';
-import { AuthService } from './auth.service';
-import { Public } from '../../core/decorators/public.decorator';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { ProfileResponse } from './dto/profile-response.dto';
-import { JwtAuthGuard } from '../../core/guards/auth.guard';
+  Ip,
+  Post, Req,
+  UseGuards,
+} from '@nestjs/common'
+import { Public } from '../../core/decorators/public.decorator'
+import { JwtAuthGuard } from '../../core/guards/auth.guard'
+import { AuthService } from './auth.service'
+import { AuthResponse } from './dto/auth-response.dto'
+import { LoginDto } from './dto/login.dto'
+import { LogoutDto } from './dto/logout.dto'
+import { ProfileResponse } from './dto/profile-response.dto'
+import { RefreshTokenDto } from './dto/refresh-token.dto'
 
 @Controller('auth')
+@UseGuards()
 export class AuthController {
-  constructor(private authService: AuthService) {}
-  
+  constructor(private authService: AuthService) { }
+
   @Public()
   @Post('login')
   async login(
@@ -27,47 +30,54 @@ export class AuthController {
     @Ip() ipAddress: string,
   ): Promise<AuthResponse> {
     try {
+
+      console.log("Login attempt:", {
+        username: loginDto.username,
+        userAgent,
+        ipAddress,
+      })
       return await this.authService.login(
         loginDto.username,
         loginDto.password,
         userAgent,
         ipAddress,
-      );
+      )
     } catch (error) {
       if (error.message.includes('hierarchy')) {
-        throw new BadRequestException(error.message);
+        throw new BadRequestException(error.message)
       }
-      throw error;
+      throw error
     }
   }
-  
+
   @Public()
   @Post('refresh')
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
   ): Promise<AuthResponse> {
-    return this.authService.refreshToken(refreshTokenDto.refreshToken);
+    return this.authService.refreshToken(refreshTokenDto.refreshToken)
   }
-  
+
+  @Public()
   @Post('logout')
   async logout(
     @Body() logoutDto: LogoutDto,
     @Req() request: Request,
   ): Promise<void> {
-    const refreshToken = logoutDto.refreshToken || this.extractRefreshTokenFromHeader(request);
-    
+    const refreshToken = logoutDto.refreshToken || this.extractRefreshTokenFromHeader(request)
+
     if (!refreshToken) {
-      throw new BadRequestException('Refresh token is required');
+      throw new BadRequestException('Refresh token is required')
     }
-    
-    await this.authService.logout(refreshToken);
+
+    await this.authService.logout(refreshToken)
   }
-  
+
   @Post('logout-all')
   async logoutAll(@Req() request: any): Promise<void> {
-    await this.authService.logoutAll(request.user.id);
+    await this.authService.logoutAll(request.user.id)
   }
-  
+
   @Get('profile')
   async getProfile(
     @Req() request: any,
@@ -79,13 +89,14 @@ export class AuthController {
       companyId: companyId || request.query.companyId,
       courseId: courseId || request.query.courseId,
       branchId: branchId || request.query.branchId,
-    };
-    
+    }
+
     const authorities = await this.authService.getUserAuthorities(
       request.user.id,
       context,
-    );
-    
+    )
+    console.log(authorities)
+
     return {
       id: request.user.id,
       username: request.user.username,
@@ -96,9 +107,9 @@ export class AuthController {
       phone: request.user.phone,
       authorities: authorities.map(auth => auth.authority),
       currentContext: request.user.currentContext || {},
-    };
+    }
   }
-  
+
   @Get('contexts')
   @UseGuards(JwtAuthGuard)
   async getAvailableContexts(@Req() req: any) {
@@ -106,23 +117,23 @@ export class AuthController {
       this.authService.getUsersCompanies(req.user.id),
       this.authService.getUsersCourses(req.user.id),
       this.authService.getUsersBranches(req.user.id),
-    ]);
-    
+    ])
+
     return {
       companies,
       courses,
       branches,
-    };
+    }
   }
-  
+
   @Post('select-context')
   @UseGuards(JwtAuthGuard)
   async selectContext(
     @Req() req: any,
     @Body() context: {
-      companyId: string;
-      courseId?: string;
-      branchId?: string;
+      companyId: string
+      courseId?: string
+      branchId?: string
     },
     @Headers('user-agent') userAgent: string,
     @Ip() ipAddress: string,
@@ -131,21 +142,30 @@ export class AuthController {
     const hasAccess = await this.authService.validateUserContext(
       req.user.id,
       context,
-    );
-    
+    )
+
     if (!hasAccess) {
-      throw new BadRequestException('User does not have access to this context');
+      throw new BadRequestException('User does not have access to this context')
     }
-    
+
     // Генерируем новые токены с выбранным контекстом
-    const user = await this.authService.findUserById(req.user.id);
+    const user = await this.authService.findUserById(req.user.id)
     const tokens = await this.authService.generateTokens(
       user,
       userAgent,
       ipAddress,
       context,
-    );
-    
+    )
+
+    console.log(context)
+
+
+    // Получаем authorities для выбранного контекста
+    const authorities = await this.authService.getUserAuthorities(
+      user._id.toString(),
+      context,
+    )
+
     return {
       ...tokens,
       user: {
@@ -156,16 +176,17 @@ export class AuthController {
         lastName: user.lastName,
       },
       context,
-    };
+      authorities: authorities.map(auth => auth.authority),
+    }
   }
-  
+
   @Post('switch-context')
   async switchContext(
     @Req() request: any,
     @Body() context: {
-      companyId?: string;
-      courseId?: string;
-      branchId?: string;
+      companyId?: string
+      courseId?: string
+      branchId?: string
     },
     @Headers('user-agent') userAgent: string,
     @Ip() ipAddress: string,
@@ -173,20 +194,26 @@ export class AuthController {
     const hasAccess = await this.authService.validateUserContext(
       request.user.id,
       context,
-    );
-    
+    )
+
     if (!hasAccess) {
-      throw new BadRequestException('User does not have access to this context');
+      throw new BadRequestException('User does not have access to this context')
     }
-    
-    const user = await this.authService.findUserById(request.user.id);
+
+    const user = await this.authService.findUserById(request.user.id)
     const tokens = await this.authService.generateTokens(
       user,
       userAgent,
       ipAddress,
       context,
-    );
-    
+    )
+
+
+    const authorities = await this.authService.getUserAuthorities(
+      request.user.id,
+      context,
+    )
+
     return {
       ...tokens,
       user: {
@@ -197,15 +224,16 @@ export class AuthController {
         lastName: user.lastName,
       },
       context,
-    };
+      authorities: authorities.map(auth => auth.authority),
+    }
   }
-  
+
   private extractRefreshTokenFromHeader(request: Request): string | null {
     // Правильный способ получения заголовка
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) return null;
-    
-    const [type, token] = authHeader.split(' ');
-    return type === 'Refresh' ? token : null;
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader) return null
+
+    const [type, token] = authHeader.split(' ')
+    return type === 'Refresh' ? token : null
   }
 }
