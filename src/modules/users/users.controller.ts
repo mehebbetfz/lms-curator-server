@@ -18,26 +18,26 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  // @Authorities('USER_CREATE')
+  // @Authorities('')
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  // @Authorities('USER_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: UserFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.usersService.find(searchParams, { page, limit });
   }
 
   @Get(':id')
-  // @Authorities('USER_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.usersService.findById(id);
   }
 
   @Patch(':id')
-  // @Authorities('USER_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -46,7 +46,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  // @Authorities('USER_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.usersService.deleteOne({ _id: id });
   }

@@ -25,26 +25,26 @@ export class AuthorityCategoriesController {
   constructor(private readonly authorityCategoriesService: AuthorityCategoriesService) {}
   
   @Post()
-  // @Authorities('COURSE_CREATE')
+  // @Authorities('')
   async create(@Body() createAuthorityCategoryDto: CreateAuthorityCategoryDto, @Req() req: any) {
     return this.authorityCategoriesService.create(createAuthorityCategoryDto, req.user.currentContext);
   }
   
   @Get()
-  // @Authorities('COURSE_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: AuthorityCategoryFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.authorityCategoriesService.find(searchParams, { page, limit });
   }
   
   @Get(':id')
-  // @Authorities('COURSE_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.authorityCategoriesService.findById(id);
   }
   
   @Patch(':id')
-  // @Authorities('COURSE_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateAuthorityCategoryDto: UpdateAuthorityCategoryDto,
@@ -53,7 +53,7 @@ export class AuthorityCategoriesController {
   }
   
   @Delete(':id')
-  // @Authorities('COURSE_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.authorityCategoriesService.deleteOne({ _id: id });
   }

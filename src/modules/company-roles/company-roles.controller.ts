@@ -23,26 +23,26 @@ export class CompanyRolesController {
   constructor(private readonly companyRolesService: CompanyRolesService) { }
 
   @Post()
-  // @Authorities('COMPANY_ROLE_CREATE')
+  // @Authorities('')
   async create(@Body() createCompanyRoleDto: CreateCompanyRoleDto, @Req() req: any) {
     return this.companyRolesService.create(createCompanyRoleDto, req.user.currentContext)
   }
 
   @Get()
-  // @Authorities('COMPANY_ROLE_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: CompanyRoleFindParamsReqDto) {
     const { page, limit, ...searchParams } = query
     return await this.companyRolesService.find(searchParams, { page, limit })
   }
 
   @Get(':id')
-  // @Authorities('COMPANY_ROLE_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.companyRolesService.findById(id)
   }
 
   @Patch(':id')
-  // @Authorities('COMPANY_ROLE_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateCompanyRoleDto: UpdateCompanyRoleDto,
@@ -51,7 +51,7 @@ export class CompanyRolesController {
   }
 
   @Delete(':id')
-  // @Authorities('COMPANY_ROLE_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.companyRolesService.deleteOne({ _id: id })
   }

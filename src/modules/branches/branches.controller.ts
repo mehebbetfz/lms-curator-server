@@ -20,26 +20,26 @@ export class BranchesController {
   constructor(private readonly branchesService: BranchesService) {}
   
   @Post()
-  // @Authorities('COMPANY_CREATE')
+  // @Authorities('')
   async create(@Body() createBranchDto: CreateBranchDto, @Req() req: any) {
     return this.branchesService.create(createBranchDto, req.user.currentContext);
   }
   
   @Get()
-  // @Authorities('COMPANY_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: BranchFindParamsReqDto) {
     const { page, limit, ...searchParams } = query;
     return await this.branchesService.find(searchParams, { page, limit });
   }
   
   @Get(':id')
-  // @Authorities('COMPANY_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.branchesService.findById(id);
   }
   
   @Patch(':id')
-  // @Authorities('COMPANY_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateBranchDto: UpdateBranchDto,
@@ -48,7 +48,7 @@ export class BranchesController {
   }
   
   @Delete(':id')
-  // @Authorities('COMPANY_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     return await this.branchesService.deleteOne({ _id: id });
   }

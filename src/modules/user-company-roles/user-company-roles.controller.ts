@@ -23,13 +23,13 @@ export class UserCompanyRolesController {
   constructor(private readonly userCompanyRolesService: UserCompanyRolesService) { }
 
   @Post()
-  // @Authorities('USER_COMPANY_ROLE_CREATE')
+  // @Authorities('')
   async create(@Body() createUserCompanyRoleDto: CreateUserCompanyRoleDto, @Req() req: any) {
     return this.userCompanyRolesService.create(createUserCompanyRoleDto, req.user.currentContext)
   }
 
   @Get()
-  // @Authorities('USER_COMPANY_ROLE_READ_MANY')
+  // @Authorities('')
   async find(@Query() query: UserCompanyRoleFindParamsReqDto) {
     const { page, limit, ...searchParams } = query
     return await this.userCompanyRolesService.find(searchParams, { page, limit })
@@ -42,13 +42,13 @@ export class UserCompanyRolesController {
   }
 
   @Get(':id')
-  // @Authorities('USER_COMPANY_ROLE_READ_ONE')
+  // @Authorities('')
   async findById(@Param('id') id: string) {
     return await this.userCompanyRolesService.findById(id)
   }
 
   @Patch(':id')
-  // @Authorities('USER_COMPANY_ROLE_UPDATE')
+  // @Authorities('')
   async update(
     @Param('id') id: string,
     @Body() updateUserCompanyRoleDto: UpdateUserCompanyRoleDto,
@@ -57,7 +57,7 @@ export class UserCompanyRolesController {
   }
 
   @Delete(':id')
-  // @Authorities('USER_COMPANY_ROLE_DELETE_ONE')
+  // @Authorities('')
   async deleteOne(@Param('id') id: string) {
     console.log("id to delete:", id)
     return await this.userCompanyRolesService.deleteOne({ _id: id })
